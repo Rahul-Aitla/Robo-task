@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-
 const HF_MODELS = [
     'damo-vilab/text-to-video-ms-1.7b',
     'cerspense/zeroscope_v2_576w'
