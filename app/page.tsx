@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, Zap, TrendingUp, Target } from 'lucide-react';
+import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, Moon, Sun, User, Target, Lightbulb, Zap } from 'lucide-react';
 import type { CampaignOutput, PostIdea } from '@/lib/types';
 
 const EXAMPLE_PRODUCTS = [
-  { product: 'Eco-friendly water bottles made from recycled materials', audience: 'College students interested in sustainability' },
-  { product: 'AI-powered productivity app for remote teams', audience: 'Startup founders and tech professionals' },
-  { product: 'Handmade organic skincare products', audience: 'Health-conscious millennials aged 25-35' },
+  { product: 'Eco-friendly water bottles made from recycled materials', audience: 'College students interested in sustainability', label: '🌱 Eco Product' },
+  { product: 'AI-powered productivity app for remote teams', audience: 'Startup founders and tech professionals', label: '💼 SaaS App' },
+  { product: 'Handmade organic skincare products', audience: 'Health-conscious millennials aged 25-35', label: '✨ Beauty Brand' },
 ];
 
 export default function Home() {
@@ -25,13 +25,16 @@ export default function Home() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [generatingImage, setGeneratingImage] = useState<number | null>(null);
   const [generatedImages, setGeneratedImages] = useState<Record<number, string>>({});
+  const [selectedPost, setSelectedPost] = useState<number>(0);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   const handleGenerate = async () => {
     if (!productDescription || !targetAudience) return;
 
     setLoading(true);
     setResult(null);
-    setGeneratedImages({}); // Reset images
+    setGeneratedImages({});
+    setSelectedPost(0);
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -91,448 +94,461 @@ export default function Home() {
   const getPostIcon = (type: PostIdea['type']) => {
     switch (type) {
       case 'carousel':
-        return <ImageIcon className="w-4 h-4" />;
+        return <ImageIcon className="w-3.5 h-3.5" />;
       case 'reel':
-        return <Video className="w-4 h-4" />;
+        return <Video className="w-3.5 h-3.5" />;
       case 'static':
-        return <MessageSquare className="w-4 h-4" />;
+        return <MessageSquare className="w-3.5 h-3.5" />;
     }
   };
 
   const getPostColor = (type: PostIdea['type']) => {
     switch (type) {
       case 'carousel':
-        return 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300';
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
       case 'reel':
-        return 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300';
+        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
       case 'static':
-        return 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-300';
+        return 'bg-green-500/10 text-green-400 border-green-500/30';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/50 dark:to-slate-950">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      {/* Header */}
-      <header className="border-b border-purple-200/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-slate-950">
+      {/* Top Bar */}
+      <header className="border-b border-slate-800/60 bg-slate-900/70 backdrop-blur-sm sticky top-0 z-50 shadow-xl shadow-black/20">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
+            {/* Left: Logo */}
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg">
-                <Instagram className="w-6 h-6 text-white" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  CampaignAI Studio
+                <h1 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  AI Campaign Studio
                 </h1>
-                <p className="text-xs text-muted-foreground">AI-Powered Social Media Magic ✨</p>
+                <p className="text-xs text-slate-500">Powered by Gemini 2.0</p>
               </div>
             </div>
-            <Badge variant="secondary" className="hidden sm:flex gap-1">
-              <Zap className="w-3 h-3" />
-              Powered by Gemini
-            </Badge>
+
+            {/* Center: Module */}
+            <div className="hidden md:flex items-center gap-2">
+              <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 px-3 py-1">
+                <Instagram className="w-3 h-3 mr-1.5" />
+                Campaign Studio
+              </Badge>
+            </div>
+
+            {/* Right: Controls */}
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="hidden sm:flex text-xs border-slate-700 text-slate-400">
+                AI Builder Assignment
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <User className="w-4 h-4 text-white" />
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
-        {/* Hero Section */}
-        {!result && !loading && (
-          <div className="text-center mb-12 animate-fade-in">
-            <div className="inline-flex items-center gap-2 bg-purple-100 dark:bg-purple-900/30 px-4 py-2 rounded-full mb-6">
-              <TrendingUp className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-900 dark:text-purple-200">
-                Generate Complete Campaigns in Seconds
-              </span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-              Create Instagram Campaigns
-              <br />
-              That Actually Convert
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Get AI-generated content plans, engaging captions, viral hooks, and stunning image prompts—all tailored to your brand
-            </p>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-purple-200/50">
-                <div className="text-2xl font-bold text-purple-600">5</div>
-                <div className="text-xs text-muted-foreground">Post Ideas</div>
-              </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-pink-200/50">
-                <div className="text-2xl font-bold text-pink-600">30s</div>
-                <div className="text-xs text-muted-foreground">Generation Time</div>
-              </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-blue-200/50">
-                <div className="text-2xl font-bold text-blue-600">100%</div>
-                <div className="text-xs text-muted-foreground">Ready to Use</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Input Section */}
-        <Card className="mb-8 border-2 border-purple-200/50 shadow-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-          <CardHeader className="space-y-3">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              Create Your Campaign
-            </CardTitle>
-            <CardDescription className="text-base">
-              Describe your product and audience—our AI will craft a complete Instagram strategy
-            </CardDescription>
-
-            {/* Example Chips */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <span className="text-xs text-muted-foreground">Try an example:</span>
-              {EXAMPLE_PRODUCTS.map((example, i) => (
-                <Button
-                  key={i}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => useExample(example)}
-                  className="text-xs h-7 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                >
-                  Example {i + 1}
-                </Button>
-              ))}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="product" className="text-sm font-semibold flex items-center gap-2">
-                <Target className="w-4 h-4 text-purple-600" />
-                Product Description
-              </Label>
-              <Textarea
-                id="product"
-                placeholder="e.g., I sell eco-friendly water bottles made from recycled materials that keep drinks cold for 24 hours"
-                value={productDescription}
-                onChange={(e) => setProductDescription(e.target.value)}
-                rows={3}
-                className="resize-none border-purple-200 focus:border-purple-400 focus:ring-purple-400"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="audience" className="text-sm font-semibold flex items-center gap-2">
-                <Instagram className="w-4 h-4 text-pink-600" />
-                Target Audience
-              </Label>
-              <Input
-                id="audience"
-                placeholder="e.g., College students aged 18-24 interested in sustainability and eco-friendly lifestyle"
-                value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-                className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-              />
-            </div>
-            <Button
-              onClick={handleGenerate}
-              disabled={!productDescription || !targetAudience || loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-              size="lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Crafting Your Campaign Magic...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Campaign
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Results Section */}
-        {result && (
-          <div className="space-y-8 animate-fade-in">
-            {/* Success Banner */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-2 border-green-200 dark:border-green-800 rounded-xl p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500 mb-3">
-                <Check className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-green-900 dark:text-green-100 mb-2">
-                Campaign Generated Successfully! 🎉
-              </h3>
-              <p className="text-green-700 dark:text-green-300">
-                Your complete Instagram campaign is ready. Copy and use any content below.
-              </p>
-            </div>
-
-            {/* Content Plan */}
-            <Card className="border-2 border-purple-200/50 shadow-xl bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Campaign Brief */}
+          <div className="lg:col-span-1">
+            <Card className="rounded-2xl border border-slate-800/60 bg-slate-900/70 shadow-xl shadow-black/20 sticky top-24 transition-all hover:shadow-2xl hover:shadow-black/30">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-purple-500">
-                    <TrendingUp className="w-5 h-5 text-white" />
-                  </div>
-                  Content Strategy
+                <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
+                  <Target className="w-5 h-5 text-indigo-400" />
+                  Campaign Brief
                 </CardTitle>
+                <CardDescription className="text-sm text-slate-400">
+                  Fill in the details to generate your Instagram campaign
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-base leading-relaxed text-foreground/90">{result.contentPlan}</p>
+              <CardContent className="space-y-5">
+                {/* Product Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="product" className="text-sm font-medium text-slate-200">
+                    Product Description
+                  </Label>
+                  <p className="text-xs text-slate-500">What are you promoting?</p>
+                  <Textarea
+                    id="product"
+                    placeholder="e.g., Eco-friendly water bottles made from recycled materials"
+                    value={productDescription}
+                    onChange={(e) => setProductDescription(e.target.value)}
+                    rows={3}
+                    className="rounded-lg border-slate-700 bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none transition-all"
+                  />
+                </div>
+
+                {/* Target Audience */}
+                <div className="space-y-2">
+                  <Label htmlFor="audience" className="text-sm font-medium text-slate-200">
+                    Target Audience
+                  </Label>
+                  <p className="text-xs text-slate-500">Who are you trying to reach?</p>
+                  <Input
+                    id="audience"
+                    placeholder="e.g., College students interested in sustainability"
+                    value={targetAudience}
+                    onChange={(e) => setTargetAudience(e.target.value)}
+                    className="rounded-lg border-slate-700 bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+
+                {/* Quick Examples */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-amber-400" />
+                    <Label className="text-xs font-medium text-slate-400">
+                      Not sure what to enter? Try one of these presets:
+                    </Label>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {EXAMPLE_PRODUCTS.map((example, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => useExample(example)}
+                        className="justify-start text-xs h-9 rounded-lg border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all"
+                      >
+                        {example.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="bg-slate-800" />
+
+                {/* Generate Button */}
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!productDescription || !targetAudience || loading}
+                  className="w-full rounded-lg bg-indigo-500 hover:bg-indigo-600 text-sm font-medium px-4 py-2.5 disabled:opacity-50 transition-all hover:shadow-lg hover:shadow-indigo-500/20"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating Campaign...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate Campaign
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Post Ideas */}
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold flex items-center gap-3">
-                  <Instagram className="w-8 h-8 text-pink-600" />
-                  Your 5 Post Ideas
-                </h2>
-                <Badge variant="secondary" className="text-sm">
-                  Ready to Post
-                </Badge>
-              </div>
-              <div className="grid gap-6">
-                {result.posts.map((post, index) => (
-                  <Card key={index} className="border-2 border-purple-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.01] bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Badge className={`${getPostColor(post.type)} border`}>
-                              <span className="flex items-center gap-1.5 font-semibold">
-                                {getPostIcon(post.type)}
-                                {post.type.toUpperCase()}
-                              </span>
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              Post {index + 1} of 5
-                            </Badge>
+          {/* Right Column: Results - Two Panel Structure */}
+          <div className="lg:col-span-2">
+            <Card className="rounded-2xl border border-slate-800/60 bg-slate-900/70 shadow-xl shadow-black/20">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Instagram className="w-5 h-5 text-pink-400" />
+                  <div className="flex-1">
+                    <CardTitle className="text-xl font-semibold text-white">Campaign Ideas</CardTitle>
+                    <CardDescription className="text-xs text-slate-500 mt-1">
+                      Generated posts will appear here. Click to open details.
+                    </CardDescription>
+                  </div>
+                  {result && (
+                    <Badge className="bg-green-500/10 text-green-400 border-green-500/30">
+                      {result.posts.length} Posts
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  {/* Left Panel: Post List */}
+                  <div className="md:col-span-2 space-y-3">
+                    {!result && !loading && (
+                      <div className="text-center py-16 flex flex-col items-center justify-center">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full"></div>
+                          <div className="relative inline-flex p-4 rounded-full bg-slate-800/50 border border-slate-700">
+                            <Instagram className="w-10 h-10 text-slate-600" />
                           </div>
-                          <CardTitle className="text-2xl leading-tight">{post.title}</CardTitle>
+                        </div>
+                        <p className="text-sm text-slate-400 mb-2">No campaign generated yet</p>
+                        <p className="text-xs text-slate-600">Fill the brief and hit Generate</p>
+                      </div>
+                    )}
+
+                    {loading && (
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 animate-pulse">
+                            <div className="h-3 bg-slate-800 rounded w-3/4 mb-2"></div>
+                            <div className="h-2 bg-slate-800 rounded w-1/2"></div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {result && (
+                      <>
+                        {/* Content Plan */}
+                        <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3 mb-3 transition-all hover:bg-indigo-500/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Zap className="w-3.5 h-3.5 text-indigo-400" />
+                            <p className="text-xs font-medium text-indigo-400 uppercase tracking-wide">
+                              Strategy
+                            </p>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">{result.contentPlan}</p>
+                        </div>
+
+                        {/* Post List */}
+                        {result.posts.map((post, index) => (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedPost(index)}
+                            className={`rounded-xl border p-3 cursor-pointer transition-all hover:bg-slate-800/50 hover:border-indigo-500/50 ${selectedPost === index
+                                ? 'border-indigo-500 bg-slate-800/50 shadow-lg shadow-indigo-500/10'
+                                : 'border-slate-800 bg-slate-900/60'
+                              }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <Badge className={`${getPostColor(post.type)} border text-xs px-2 py-0.5`}>
+                                    <span className="flex items-center gap-1">
+                                      {getPostIcon(post.type)}
+                                      {post.type.toUpperCase()}
+                                    </span>
+                                  </Badge>
+                                </div>
+                                <h3 className="text-xs font-semibold text-white mb-1 line-clamp-2">{post.title}</h3>
+                                <p className="text-xs text-slate-500 line-clamp-1">{post.hook}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Right Panel: Post Details */}
+                  <div className="md:col-span-3 space-y-4">
+                    {!result && !loading && (
+                      <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-6 space-y-4">
+                        <div className="space-y-2">
+                          <div className="h-4 bg-slate-800/50 rounded w-20"></div>
+                          <div className="h-6 bg-slate-800/50 rounded w-3/4"></div>
+                        </div>
+                        <Separator className="bg-slate-800/50" />
+                        <div className="space-y-2">
+                          <div className="h-3 bg-slate-800/50 rounded w-16"></div>
+                          <div className="h-20 bg-slate-800/50 rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-3 bg-slate-800/50 rounded w-20"></div>
+                          <div className="flex gap-2">
+                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
+                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
+                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
+                          </div>
+                        </div>
+                        <Button disabled className="w-full rounded-lg" size="sm">
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Generate Image
+                        </Button>
+                      </div>
+                    )}
+
+                    {loading && (
+                      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 animate-pulse">
+                        <div className="h-6 bg-slate-800 rounded w-3/4"></div>
+                        <div className="h-24 bg-slate-800 rounded"></div>
+                        <div className="flex gap-2">
+                          <div className="h-6 bg-slate-800 rounded w-16"></div>
+                          <div className="h-6 bg-slate-800 rounded w-16"></div>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                      {/* Hook */}
-                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-xl p-4 border-2 border-yellow-200 dark:border-yellow-800">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm font-bold flex items-center gap-1">
+                    )}
+
+                    {result && result.posts[selectedPost] && (
+                      <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-5 space-y-4">
+                        {/* Hook */}
+                        <div>
+                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
                             🪝 Opening Hook
                           </Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.hook, index * 10 + 1)}
-                            className="h-8"
-                          >
-                            {copiedIndex === index * 10 + 1 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
+                          <p className="text-base font-semibold text-white leading-relaxed">
+                            {result.posts[selectedPost].hook}
+                          </p>
                         </div>
-                        <p className="text-sm font-medium leading-relaxed">{post.hook}</p>
-                      </div>
 
-                      <Separator />
+                        <Separator className="bg-slate-800" />
 
-                      {/* Caption */}
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <Label className="text-sm font-bold flex items-center gap-1">
-                            ✍️ Full Caption
-                          </Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.caption, index * 10 + 2)}
-                            className="h-8"
-                          >
-                            {copiedIndex === index * 10 + 2 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
+                        {/* Caption */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                              ✍️ Full Caption
+                            </Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(result.posts[selectedPost].caption, 1)}
+                              className="h-7 text-xs hover:bg-slate-800 transition-colors"
+                            >
+                              {copiedIndex === 1 ? (
+                                <>
+                                  <Check className="w-3 h-3 mr-1 text-green-400" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 max-h-40 overflow-y-auto">
+                            <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">
+                              {result.posts[selectedPost].caption}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm whitespace-pre-wrap bg-muted/50 p-4 rounded-lg leading-relaxed border">
-                          {post.caption}
-                        </p>
-                      </div>
 
-                      <Separator />
-
-                      {/* CTA */}
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-xl p-4 border-2 border-purple-200 dark:border-purple-800">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm font-bold flex items-center gap-1">
+                        {/* CTA */}
+                        <div>
+                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
                             🎯 Call-to-Action
                           </Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.cta, index * 10 + 3)}
-                            className="h-8"
-                          >
-                            {copiedIndex === index * 10 + 3 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
+                          <p className="text-sm font-medium text-indigo-400">
+                            {result.posts[selectedPost].cta}
+                          </p>
                         </div>
-                        <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
-                          {post.cta}
-                        </p>
-                      </div>
 
-                      <Separator />
+                        {/* Hashtags */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                              #️⃣ Hashtags ({result.posts[selectedPost].hashtags.length})
+                            </Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                copyToClipboard(result.posts[selectedPost].hashtags.join(' '), 2)
+                              }
+                              className="h-7 text-xs hover:bg-slate-800 transition-colors"
+                            >
+                              {copiedIndex === 2 ? (
+                                <>
+                                  <Check className="w-3 h-3 mr-1 text-green-400" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {result.posts[selectedPost].hashtags.map((tag, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs font-mono bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
 
-                      {/* Hashtags */}
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <Label className="text-sm font-bold flex items-center gap-1">
-                            #️⃣ Hashtags ({post.hashtags.length})
+                        <Separator className="bg-slate-800" />
+
+                        {/* Image Concept */}
+                        <div>
+                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
+                            🎨 Image Concept
                           </Label>
+                          <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 mb-3">
+                            <p className="text-xs text-slate-300 font-mono leading-relaxed">
+                              {result.posts[selectedPost].imagePrompt}
+                            </p>
+                          </div>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.hashtags.join(' '), index * 10 + 4)}
-                            className="h-8"
+                            onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
+                            disabled={generatingImage === selectedPost}
+                            className="w-full rounded-lg bg-indigo-500 hover:bg-indigo-600 text-sm font-medium transition-all hover:shadow-lg hover:shadow-indigo-500/20"
                           >
-                            {copiedIndex === index * 10 + 4 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {post.hashtags.map((tag, i) => (
-                            <Badge key={i} variant="secondary" className="text-xs font-mono">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Image Prompt */}
-                      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 rounded-xl p-4 border-2 border-blue-200 dark:border-blue-800">
-                        <div className="flex items-center justify-between mb-3">
-                          <Label className="text-sm font-bold flex items-center gap-1">
-                            🎨 AI Image Generation Prompt
-                          </Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.imagePrompt, index * 10 + 5)}
-                            className="h-8"
-                          >
-                            {copiedIndex === index * 10 + 5 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                        <p className="text-sm leading-relaxed text-blue-900 dark:text-blue-200">
-                          {post.imagePrompt}
-                        </p>
-                        <div className="flex gap-2 mt-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleGenerateImage(post.imagePrompt, index)}
-                            disabled={generatingImage === index}
-                            className="flex-1"
-                          >
-                            {generatingImage === index ? (
+                            {generatingImage === selectedPost ? (
                               <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Generating...
+                                Generating Image...
                               </>
                             ) : (
                               <>
                                 <ImageIcon className="w-4 h-4 mr-2" />
-                                Generate Image
+                                Generate Image for This Post
                               </>
                             )}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(post.imagePrompt, index * 10 + 5)}
-                            className="h-9"
-                          >
-                            {copiedIndex === index * 10 + 5 ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
+
+                          {/* Generated Image */}
+                          {generatedImages[selectedPost] && (
+                            <div className="mt-4 rounded-xl border border-slate-700 overflow-hidden transition-all hover:shadow-xl hover:shadow-black/30">
+                              <img
+                                src={generatedImages[selectedPost]}
+                                alt={result.posts[selectedPost].title}
+                                className="w-full"
+                              />
+                              <div className="bg-slate-900 p-3 flex items-center justify-between">
+                                <p className="text-xs text-slate-400">✨ AI-Generated Image</p>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
+                                    className="text-xs h-7 rounded-lg border-slate-700 hover:bg-slate-800 transition-colors"
+                                  >
+                                    Regenerate
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="text-xs h-7 rounded-lg border-slate-700 hover:bg-slate-800 transition-colors"
+                                  >
+                                    <a href={generatedImages[selectedPost]} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {generatedImages[index] && (
-                          <div className="mt-4">
-                            <img
-                              src={generatedImages[index]}
-                              alt={post.title}
-                              className="w-full rounded-lg border-2 border-blue-300 shadow-lg"
-                            />
-                            <p className="text-xs text-center text-muted-foreground mt-2">
-                              ✨ AI-Generated Image • Right-click to save
-                            </p>
-                          </div>
-                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Generate Another Button */}
-            <div className="text-center pt-8">
-              <Button
-                onClick={() => {
-                  setResult(null);
-                  setProductDescription('');
-                  setTargetAudience('');
-                }}
-                variant="outline"
-                size="lg"
-                className="border-2 border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/20"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Another Campaign
-              </Button>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-purple-200/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm mt-20 relative z-10">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Built with <span className="text-red-500">♥</span> using Next.js, Google Gemini, and shadcn/ui
-            </p>
-            <p className="text-xs text-muted-foreground">
-              AI-Powered Campaign Generation • Instant Results • Ready to Use
-            </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </footer>
+      </main>
     </div>
   );
 }
