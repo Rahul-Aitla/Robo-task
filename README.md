@@ -94,7 +94,7 @@ campaign-studio/
 ## 🎨 Key Features Explained
 
 ### AI Integration
-- Uses Google Gemini 1.5 Flash for fast, cost-effective, high-quality content generation
+- Uses Google Gemini 2.0 Flash for fast, cost-effective, high-quality content generation
 - Structured output with Zod schema validation ensures consistent results
 - Prompt engineering optimized for marketing content
 
@@ -124,14 +124,14 @@ The app can be deployed to any platform that supports Next.js:
 ## 📝 Technical Write-up
 
 **AI Models Used:**
-Google Gemini 1.5 Flash for content generation
+Google Gemini 2.0-flash-exp for content generation
 
 **Why This Model:**
-Gemini 1.5 Flash offers exceptional creative writing capabilities with fast response times and generous free tier, making it perfect for generating marketing content. It excels at understanding context, maintaining brand voice, and producing engaging, audience-specific copy with consistent quality.
+Gemini 2.0-flash-exp offers exceptional creative writing capabilities with fast response times and generous free tier, making it perfect for generating marketing content. It excels at understanding context, maintaining brand voice, and producing engaging, audience-specific copy with consistent quality.
 
 **How AI is Used:**
 1. User input (product + audience) is processed into a structured prompt
-2. Gemini 1.5 Flash generates a complete campaign with content plan and 5 post ideas
+2. Gemini 2.0-flash-exp generates a complete campaign with content plan and 5 post ideas
 3. Zod schema validation ensures consistent, structured output
 4. Results include captions, hooks, CTAs, hashtags, and image prompts
 
@@ -172,4 +172,4 @@ Built as a technical assignment to demonstrate full-stack AI application develop
 - Rate limiting
 - Database for saving campaigns
 - Payment integration
-- More AI models (image generation, etc.)
+- More AI models (video generation, etc.)
