@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, Moon, Sun, User, Target, Lightbulb, Zap } from 'lucide-react';
+import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, User, Target, Lightbulb, Zap, PlayCircle } from 'lucide-react';
 import type { CampaignOutput, PostIdea } from '@/lib/types';
+import { clsx } from 'clsx';
+import { AppSidebar } from '@/components/app-sidebar';
 
 const EXAMPLE_PRODUCTS = [
   { product: 'Eco-friendly water bottles made from recycled materials', audience: 'College students interested in sustainability', label: '🌱 Eco Product' },
@@ -24,9 +26,12 @@ export default function Home() {
   const [result, setResult] = useState<CampaignOutput | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [generatingImage, setGeneratingImage] = useState<number | null>(null);
+  const [generatingVideo, setGeneratingVideo] = useState<number | null>(null);
   const [generatedImages, setGeneratedImages] = useState<Record<number, string>>({});
+  const [generatedVideos, setGeneratedVideos] = useState<Record<number, string>>({});
   const [selectedPost, setSelectedPost] = useState<number>(0);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState<Record<number, boolean>>({});
 
   const handleGenerate = async () => {
     if (!productDescription || !targetAudience) return;
@@ -34,6 +39,7 @@ export default function Home() {
     setLoading(true);
     setResult(null);
     setGeneratedImages({});
+    setGeneratedVideos({});
     setSelectedPost(0);
     try {
       const response = await fetch('/api/generate', {
@@ -59,6 +65,7 @@ export default function Home() {
 
   const handleGenerateImage = async (prompt: string, index: number) => {
     setGeneratingImage(index);
+    setMediaLoading(prev => ({ ...prev, [index]: true }));
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -77,6 +84,30 @@ export default function Home() {
       alert('Failed to generate image. Please try again.');
     } finally {
       setGeneratingImage(null);
+    }
+  };
+
+  const handleGenerateVideo = async (prompt: string, index: number) => {
+    setGeneratingVideo(index);
+    setMediaLoading(prev => ({ ...prev, [index]: true }));
+    try {
+      const response = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate video');
+      }
+
+      const data = await response.json();
+      setGeneratedVideos(prev => ({ ...prev, [index]: data.videoUrl }));
+    } catch (error) {
+      console.error('Error generating video:', error);
+      alert('Failed to generate video. Please try again.');
+    } finally {
+      setGeneratingVideo(null);
     }
   };
 
@@ -105,450 +136,550 @@ export default function Home() {
   const getPostColor = (type: PostIdea['type']) => {
     switch (type) {
       case 'carousel':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'reel':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'static':
-        return 'bg-green-500/10 text-green-400 border-green-500/30';
+        return 'bg-green-50 text-green-700 border-green-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Top Bar */}
-      <header className="border-b border-slate-800/60 bg-slate-900/70 backdrop-blur-sm sticky top-0 z-50 shadow-xl shadow-black/20">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                  AI Campaign Studio
-                </h1>
-                <p className="text-xs text-slate-500">Powered by Gemini 2.0</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 text-slate-900 flex">
+      {/* Sidebar */}
+      <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
 
-            {/* Center: Module */}
-            <div className="hidden md:flex items-center gap-2">
-              <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 px-3 py-1">
-                <Instagram className="w-3 h-3 mr-1.5" />
-                Campaign Studio
-              </Badge>
-            </div>
-
-            {/* Right: Controls */}
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="hidden sm:flex text-xs border-slate-700 text-slate-400">
-                AI Builder Assignment
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="rounded-lg hover:bg-slate-800 transition-colors"
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <User className="w-4 h-4 text-white" />
-              </div>
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* Top Header */}
+        <header className="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-40 px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-slate-700">Campaign Studio</h2>
+            <span className="text-slate-300">/</span>
+            <span className="text-sm text-slate-500">New Campaign</span>
           </div>
-        </div>
-      </header>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="hidden sm:flex text-xs border-gray-300 text-slate-500 bg-white">
+              powered by AI
+            </Badge>
+          </div>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Campaign Brief */}
-          <div className="lg:col-span-1">
-            <Card className="rounded-2xl border border-slate-800/60 bg-slate-900/70 shadow-xl shadow-black/20 sticky top-24 transition-all hover:shadow-2xl hover:shadow-black/30">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Target className="w-5 h-5 text-indigo-400" />
-                  Campaign Brief
-                </CardTitle>
-                <CardDescription className="text-sm text-slate-400">
-                  Fill in the details to generate your Instagram campaign
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {/* Product Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="product" className="text-sm font-medium text-slate-200">
-                    Product Description
-                  </Label>
-                  <p className="text-xs text-slate-500">What are you promoting?</p>
-                  <Textarea
-                    id="product"
-                    placeholder="e.g., Eco-friendly water bottles made from recycled materials"
-                    value={productDescription}
-                    onChange={(e) => setProductDescription(e.target.value)}
-                    rows={3}
-                    className="rounded-lg border-slate-700 bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none transition-all"
-                  />
-                </div>
-
-                {/* Target Audience */}
-                <div className="space-y-2">
-                  <Label htmlFor="audience" className="text-sm font-medium text-slate-200">
-                    Target Audience
-                  </Label>
-                  <p className="text-xs text-slate-500">Who are you trying to reach?</p>
-                  <Input
-                    id="audience"
-                    placeholder="e.g., College students interested in sustainability"
-                    value={targetAudience}
-                    onChange={(e) => setTargetAudience(e.target.value)}
-                    className="rounded-lg border-slate-700 bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                  />
-                </div>
-
-                {/* Quick Examples */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-amber-400" />
-                    <Label className="text-xs font-medium text-slate-400">
-                      Not sure what to enter? Try one of these presets:
+        <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Campaign Brief */}
+            <div className="lg:col-span-1">
+              <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm sticky top-24 transition-all hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-indigo-600" />
+                    Campaign Brief
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500">
+                    Fill in the details to generate your Instagram campaign
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {/* Product Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="product" className="text-sm font-semibold text-slate-900">
+                      Product Description
                     </Label>
+                    <p className="text-xs text-slate-500">What are you promoting?</p>
+                    <Textarea
+                      id="product"
+                      placeholder="e.g., Eco-friendly water bottles made from recycled materials"
+                      value={productDescription}
+                      onChange={(e) => setProductDescription(e.target.value)}
+                      rows={3}
+                      className="rounded-lg border-gray-300 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none transition-all placeholder:text-gray-400"
+                    />
                   </div>
-                  <div className="flex flex-col gap-2">
-                    {EXAMPLE_PRODUCTS.map((example, i) => (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => useExample(example)}
-                        className="justify-start text-xs h-9 rounded-lg border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all"
-                      >
-                        {example.label}
-                      </Button>
-                    ))}
+
+                  {/* Target Audience */}
+                  <div className="space-y-2">
+                    <Label htmlFor="audience" className="text-sm font-semibold text-slate-900">
+                      Target Audience
+                    </Label>
+                    <p className="text-xs text-slate-500">Who are you trying to reach?</p>
+                    <Input
+                      id="audience"
+                      placeholder="e.g., College students interested in sustainability"
+                      value={targetAudience}
+                      onChange={(e) => setTargetAudience(e.target.value)}
+                      className="rounded-lg border-gray-300 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-gray-400"
+                    />
                   </div>
-                </div>
 
-                <Separator className="bg-slate-800" />
-
-                {/* Generate Button */}
-                <Button
-                  onClick={handleGenerate}
-                  disabled={!productDescription || !targetAudience || loading}
-                  className="w-full rounded-lg bg-indigo-500 hover:bg-indigo-600 text-sm font-medium px-4 py-2.5 disabled:opacity-50 transition-all hover:shadow-lg hover:shadow-indigo-500/20"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating Campaign...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Campaign
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column: Results - Two Panel Structure */}
-          <div className="lg:col-span-2">
-            <Card className="rounded-2xl border border-slate-800/60 bg-slate-900/70 shadow-xl shadow-black/20">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Instagram className="w-5 h-5 text-pink-400" />
-                  <div className="flex-1">
-                    <CardTitle className="text-xl font-semibold text-white">Campaign Ideas</CardTitle>
-                    <CardDescription className="text-xs text-slate-500 mt-1">
-                      Generated posts will appear here. Click to open details.
-                    </CardDescription>
+                  {/* Quick Examples */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-500" />
+                      <Label className="text-xs font-medium text-slate-500">
+                        Not sure what to enter? Try one of these presets:
+                      </Label>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {EXAMPLE_PRODUCTS.map((example, i) => (
+                        <button
+                          key={i}
+                          onClick={() => useExample(example)}
+                          className="inline-flex items-center justify-start rounded-full bg-gray-100 px-3 py-2 text-xs text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-left"
+                        >
+                          {example.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  {result && (
-                    <Badge className="bg-green-500/10 text-green-400 border-green-500/30">
-                      {result.posts.length} Posts
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  {/* Left Panel: Post List */}
-                  <div className="md:col-span-2 space-y-3">
-                    {!result && !loading && (
-                      <div className="text-center py-16 flex flex-col items-center justify-center">
-                        <div className="relative mb-4">
-                          <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full"></div>
-                          <div className="relative inline-flex p-4 rounded-full bg-slate-800/50 border border-slate-700">
-                            <Instagram className="w-10 h-10 text-slate-600" />
-                          </div>
-                        </div>
-                        <p className="text-sm text-slate-400 mb-2">No campaign generated yet</p>
-                        <p className="text-xs text-slate-600">Fill the brief and hit Generate</p>
-                      </div>
-                    )}
 
-                    {loading && (
-                      <div className="space-y-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 animate-pulse">
-                            <div className="h-3 bg-slate-800 rounded w-3/4 mb-2"></div>
-                            <div className="h-2 bg-slate-800 rounded w-1/2"></div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <Separator className="bg-gray-200" />
 
-                    {result && (
+                  {/* Generate Button */}
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={!productDescription || !targetAudience || loading}
+                    className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2.5 hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:hover:bg-indigo-600"
+                  >
+                    {loading ? (
                       <>
-                        {/* Content Plan */}
-                        <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3 mb-3 transition-all hover:bg-indigo-500/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                            <p className="text-xs font-medium text-indigo-400 uppercase tracking-wide">
-                              Strategy
-                            </p>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{result.contentPlan}</p>
-                        </div>
-
-                        {/* Post List */}
-                        {result.posts.map((post, index) => (
-                          <div
-                            key={index}
-                            onClick={() => setSelectedPost(index)}
-                            className={`rounded-xl border p-3 cursor-pointer transition-all hover:bg-slate-800/50 hover:border-indigo-500/50 ${selectedPost === index
-                                ? 'border-indigo-500 bg-slate-800/50 shadow-lg shadow-indigo-500/10'
-                                : 'border-slate-800 bg-slate-900/60'
-                              }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <Badge className={`${getPostColor(post.type)} border text-xs px-2 py-0.5`}>
-                                    <span className="flex items-center gap-1">
-                                      {getPostIcon(post.type)}
-                                      {post.type.toUpperCase()}
-                                    </span>
-                                  </Badge>
-                                </div>
-                                <h3 className="text-xs font-semibold text-white mb-1 line-clamp-2">{post.title}</h3>
-                                <p className="text-xs text-slate-500 line-clamp-1">{post.hook}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Campaign...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Campaign
                       </>
                     )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column: Results - Two Panel Structure */}
+            <div className="lg:col-span-2">
+              <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Instagram className="w-5 h-5 text-pink-500" />
+                    <div className="flex-1">
+                      <CardTitle className="text-xl font-semibold text-slate-900">Campaign Ideas</CardTitle>
+                      <CardDescription className="text-xs text-slate-500 mt-1">
+                        Generated posts will appear here. Click to open details.
+                      </CardDescription>
+                    </div>
+                    {result && (
+                      <Badge className="bg-green-50 text-green-700 border-green-200">
+                        {result.posts.length} Posts
+                      </Badge>
+                    )}
                   </div>
-
-                  {/* Right Panel: Post Details */}
-                  <div className="md:col-span-3 space-y-4">
-                    {!result && !loading && (
-                      <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-6 space-y-4">
-                        <div className="space-y-2">
-                          <div className="h-4 bg-slate-800/50 rounded w-20"></div>
-                          <div className="h-6 bg-slate-800/50 rounded w-3/4"></div>
-                        </div>
-                        <Separator className="bg-slate-800/50" />
-                        <div className="space-y-2">
-                          <div className="h-3 bg-slate-800/50 rounded w-16"></div>
-                          <div className="h-20 bg-slate-800/50 rounded"></div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="h-3 bg-slate-800/50 rounded w-20"></div>
-                          <div className="flex gap-2">
-                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
-                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
-                            <div className="h-6 bg-slate-800/50 rounded w-16"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    {/* Left Panel: Post List */}
+                    <div className="md:col-span-2 space-y-3">
+                      {!result && !loading && (
+                        <div className="text-center py-16 flex flex-col items-center justify-center">
+                          <div className="relative mb-4">
+                            <div className="absolute inset-0 bg-indigo-100 blur-xl rounded-full"></div>
+                            <div className="relative inline-flex p-4 rounded-full bg-white border border-gray-200 shadow-sm">
+                              <Instagram className="w-10 h-10 text-gray-400" />
+                            </div>
                           </div>
+                          <p className="text-sm font-medium text-slate-900 mb-1">No campaign generated yet</p>
+                          <p className="text-xs text-slate-500">Fill the brief and hit Generate</p>
                         </div>
-                        <Button disabled className="w-full rounded-lg" size="sm">
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          Generate Image
-                        </Button>
-                      </div>
-                    )}
+                      )}
 
-                    {loading && (
-                      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 animate-pulse">
-                        <div className="h-6 bg-slate-800 rounded w-3/4"></div>
-                        <div className="h-24 bg-slate-800 rounded"></div>
-                        <div className="flex gap-2">
-                          <div className="h-6 bg-slate-800 rounded w-16"></div>
-                          <div className="h-6 bg-slate-800 rounded w-16"></div>
+                      {loading && (
+                        <div className="space-y-3">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="rounded-xl border border-gray-200 bg-white p-3 animate-pulse">
+                              <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                              <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {result && result.posts[selectedPost] && (
-                      <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-5 space-y-4">
-                        {/* Hook */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
-                            🪝 Opening Hook
-                          </Label>
-                          <p className="text-base font-semibold text-white leading-relaxed">
-                            {result.posts[selectedPost].hook}
-                          </p>
-                        </div>
-
-                        <Separator className="bg-slate-800" />
-
-                        {/* Caption */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                              ✍️ Full Caption
-                            </Label>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(result.posts[selectedPost].caption, 1)}
-                              className="h-7 text-xs hover:bg-slate-800 transition-colors"
-                            >
-                              {copiedIndex === 1 ? (
-                                <>
-                                  <Check className="w-3 h-3 mr-1 text-green-400" />
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3 h-3 mr-1" />
-                                  Copy
-                                </>
-                              )}
-                            </Button>
+                      {result && (
+                        <>
+                          {/* Content Plan */}
+                          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="w-3.5 h-3.5 text-indigo-600" />
+                              <p className="text-xs font-medium text-indigo-700 uppercase tracking-wide">
+                                Strategy
+                              </p>
+                            </div>
+                            <p className="text-xs text-slate-700 leading-relaxed">{result.contentPlan}</p>
                           </div>
-                          <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 max-h-40 overflow-y-auto">
-                            <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">
-                              {result.posts[selectedPost].caption}
-                            </p>
-                          </div>
-                        </div>
 
-                        {/* CTA */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
-                            🎯 Call-to-Action
-                          </Label>
-                          <p className="text-sm font-medium text-indigo-400">
-                            {result.posts[selectedPost].cta}
-                          </p>
-                        </div>
-
-                        {/* Hashtags */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                              #️⃣ Hashtags ({result.posts[selectedPost].hashtags.length})
-                            </Label>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                copyToClipboard(result.posts[selectedPost].hashtags.join(' '), 2)
-                              }
-                              className="h-7 text-xs hover:bg-slate-800 transition-colors"
-                            >
-                              {copiedIndex === 2 ? (
-                                <>
-                                  <Check className="w-3 h-3 mr-1 text-green-400" />
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3 h-3 mr-1" />
-                                  Copy
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {result.posts[selectedPost].hashtags.map((tag, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs font-mono bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <Separator className="bg-slate-800" />
-
-                        {/* Image Concept */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
-                            🎨 Image Concept
-                          </Label>
-                          <div className="rounded-lg border border-slate-700 bg-slate-900 p-3 mb-3">
-                            <p className="text-xs text-slate-300 font-mono leading-relaxed">
-                              {result.posts[selectedPost].imagePrompt}
-                            </p>
-                          </div>
-                          <Button
-                            onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
-                            disabled={generatingImage === selectedPost}
-                            className="w-full rounded-lg bg-indigo-500 hover:bg-indigo-600 text-sm font-medium transition-all hover:shadow-lg hover:shadow-indigo-500/20"
-                          >
-                            {generatingImage === selectedPost ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Generating Image...
-                              </>
-                            ) : (
-                              <>
-                                <ImageIcon className="w-4 h-4 mr-2" />
-                                Generate Image for This Post
-                              </>
-                            )}
-                          </Button>
-
-                          {/* Generated Image */}
-                          {generatedImages[selectedPost] && (
-                            <div className="mt-4 rounded-xl border border-slate-700 overflow-hidden transition-all hover:shadow-xl hover:shadow-black/30">
-                              <img
-                                src={generatedImages[selectedPost]}
-                                alt={result.posts[selectedPost].title}
-                                className="w-full"
-                              />
-                              <div className="bg-slate-900 p-3 flex items-center justify-between">
-                                <p className="text-xs text-slate-400">✨ AI-Generated Image</p>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
-                                    className="text-xs h-7 rounded-lg border-slate-700 hover:bg-slate-800 transition-colors"
-                                  >
-                                    Regenerate
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    asChild
-                                    className="text-xs h-7 rounded-lg border-slate-700 hover:bg-slate-800 transition-colors"
-                                  >
-                                    <a href={generatedImages[selectedPost]} download>
-                                      Download
-                                    </a>
-                                  </Button>
+                          {/* Post List */}
+                          {result.posts.map((post, index) => {
+                            const isSelected = index === selectedPost;
+                            return (
+                              <div
+                                key={index}
+                                onClick={() => setSelectedPost(index)}
+                                className={clsx(
+                                  "rounded-xl border px-4 py-3 cursor-pointer transition-all",
+                                  isSelected
+                                    ? "border-indigo-300 bg-indigo-50 shadow-sm"
+                                    : "border-gray-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm"
+                                )}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                      <Badge className={clsx("text-xs px-2 py-0.5", getPostColor(post.type))}>
+                                        <span className="flex items-center gap-1">
+                                          {getPostIcon(post.type)}
+                                          {post.type.toUpperCase()}
+                                        </span>
+                                      </Badge>
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-slate-900 mb-1 line-clamp-2">{post.title}</h3>
+                                    <p className="text-xs text-slate-500 line-clamp-1">{post.hook}</p>
+                                  </div>
                                 </div>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Right Panel: Post Details */}
+                    <div className="md:col-span-3 space-y-4">
+                      {!result && !loading && (
+                        <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-6 space-y-4">
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-20"></div>
+                            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                          <Separator className="bg-gray-200" />
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-16"></div>
+                            <div className="h-20 bg-gray-200 rounded"></div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="flex gap-2">
+                              <div className="h-6 bg-gray-200 rounded w-16"></div>
+                              <div className="h-6 bg-gray-200 rounded w-16"></div>
+                              <div className="h-6 bg-gray-200 rounded w-16"></div>
+                            </div>
+                          </div>
+                          <Button disabled className="w-full rounded-lg bg-gray-200 text-gray-400" size="sm">
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Generate Image
+                          </Button>
+                        </div>
+                      )}
+
+                      {loading && (
+                        <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4 animate-pulse shadow-sm">
+                          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-24 bg-gray-200 rounded"></div>
+                          <div className="flex gap-2">
+                            <div className="h-6 bg-gray-200 rounded w-16"></div>
+                            <div className="h-6 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {result && result.posts[selectedPost] && (
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-5 space-y-5 shadow-md">
+                          {/* Hook */}
+                          <div>
+                            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                              Opening Hook
+                            </Label>
+                            <p className="text-lg font-semibold text-slate-900 leading-relaxed">
+                              {result.posts[selectedPost].hook}
+                            </p>
+                          </div>
+
+                          <Separator className="bg-indigo-100" />
+
+                          {/* Script (for Reels) or Caption */}
+                          {result.posts[selectedPost].type === 'reel' && result.posts[selectedPost].script ? (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                  Video Script
+                                </Label>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(result.posts[selectedPost].script || '', 1)}
+                                  className="h-7 text-xs text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
+                                >
+                                  {copiedIndex === 1 ? (
+                                    <>
+                                      <Check className="w-3 h-3 mr-1 text-green-600" />
+                                      Copied
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3 mr-1" />
+                                      Copy
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              <div className="rounded-lg border border-gray-200 bg-white p-4 max-h-48 overflow-y-auto shadow-sm">
+                                <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                                  {result.posts[selectedPost].script}
+                                </p>
+                              </div>
+
+                              <div className="mt-4">
+                                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                                  Caption (for description)
+                                </Label>
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <p className="text-xs text-slate-600 leading-relaxed">
+                                    {result.posts[selectedPost].caption}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                  Full Caption
+                                </Label>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(result.posts[selectedPost].caption, 1)}
+                                  className="h-7 text-xs text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
+                                >
+                                  {copiedIndex === 1 ? (
+                                    <>
+                                      <Check className="w-3 h-3 mr-1 text-green-600" />
+                                      Copied
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3 mr-1" />
+                                      Copy
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              <div className="rounded-lg border border-gray-200 bg-white p-4 max-h-48 overflow-y-auto shadow-sm">
+                                <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                                  {result.posts[selectedPost].caption}
+                                </p>
                               </div>
                             </div>
                           )}
+
+                          {/* CTA */}
+                          <div>
+                            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                              Call-to-Action
+                            </Label>
+                            <p className="text-sm font-medium text-indigo-600 bg-indigo-50 inline-block px-3 py-1 rounded-md border border-indigo-100">
+                              {result.posts[selectedPost].cta}
+                            </p>
+                          </div>
+
+                          {/* Hashtags */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                Hashtags ({result.posts[selectedPost].hashtags.length})
+                              </Label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  copyToClipboard(result.posts[selectedPost].hashtags.join(' '), 2)
+                                }
+                                className="h-7 text-xs text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
+                              >
+                                {copiedIndex === 2 ? (
+                                  <>
+                                    <Check className="w-3 h-3 mr-1 text-green-600" />
+                                    Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3 mr-1" />
+                                    Copy
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {result.posts[selectedPost].hashtags.map((tag, i) => (
+                                <span key={i} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-gray-500/10">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Separator className="bg-indigo-100" />
+
+                          {/* Image/Video Concept */}
+                          <div>
+                            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                              {result.posts[selectedPost].type === 'reel' ? 'Video Concept' : 'Image Concept'}
+                            </Label>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 mb-3">
+                              <p className="text-xs text-slate-600 font-mono leading-relaxed">
+                                {result.posts[selectedPost].imagePrompt}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                              <Button
+                                onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
+                                disabled={generatingImage === selectedPost}
+                                className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all"
+                              >
+                                {generatingImage === selectedPost ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <ImageIcon className="w-4 h-4 mr-2" />
+                                    Generate Image
+                                  </>
+                                )}
+                              </Button>
+
+                              {/* Video Button for Reels */}
+                              {result.posts[selectedPost].type === 'reel' && (
+                                <Button
+                                  onClick={() => handleGenerateVideo(result.posts[selectedPost].imagePrompt, selectedPost)}
+                                  disabled={generatingVideo === selectedPost}
+                                  className="w-full rounded-lg bg-pink-600 text-white text-sm font-medium hover:bg-pink-700 shadow-sm hover:shadow-md transition-all"
+                                >
+                                  {generatingVideo === selectedPost ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <PlayCircle className="w-4 h-4 mr-2" />
+                                      Generate Video
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Image Loading State */}
+                            {(generatingImage === selectedPost || (generatedImages[selectedPost] && mediaLoading[selectedPost])) && (
+                              <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 h-[300px] flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-300">
+                                <div className="p-4 rounded-full bg-white shadow-sm mb-3">
+                                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                                </div>
+                                <p className="text-sm font-medium text-slate-900">Creating your visual...</p>
+                                <p className="text-xs text-slate-400 mt-1">This usually takes about 5-10 seconds</p>
+                              </div>
+                            )}
+
+                            {/* Generated Image */}
+                            {generatedImages[selectedPost] && (
+                              <div className={clsx(
+                                "mt-4 rounded-2xl border border-gray-200 bg-white shadow-md overflow-hidden transition-all duration-500",
+                                (generatingImage === selectedPost || mediaLoading[selectedPost]) ? "hidden" : "animate-in fade-in zoom-in-95"
+                              )}>
+                                <img
+                                  src={generatedImages[selectedPost]}
+                                  alt={result.posts[selectedPost].title}
+                                  className="w-full object-cover max-h-[360px]"
+                                  onLoad={() => setMediaLoading(prev => ({ ...prev, [selectedPost]: false }))}
+                                />
+                                <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 bg-gray-50/50">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600">
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    AI generated image
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      asChild
+                                      className="text-xs h-8 rounded-lg border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    >
+                                      <a href={generatedImages[selectedPost]} download>
+                                        Download
+                                      </a>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Video Loading State */}
+                            {(generatingVideo === selectedPost || (generatedVideos[selectedPost] && mediaLoading[selectedPost])) && (
+                              <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 h-[300px] flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-300">
+                                <div className="p-4 rounded-full bg-white shadow-sm mb-3">
+                                  <Loader2 className="w-6 h-6 animate-spin text-pink-600" />
+                                </div>
+                                <p className="text-sm font-medium text-slate-900">Generating video...</p>
+                                <p className="text-xs text-slate-400 mt-1">This may take up to 20 seconds</p>
+                              </div>
+                            )}
+
+                            {/* Generated Video */}
+                            {generatedVideos[selectedPost] && (
+                              <div className={clsx(
+                                "mt-4 rounded-2xl border border-gray-200 bg-white shadow-md overflow-hidden transition-all duration-500",
+                                (generatingVideo === selectedPost || mediaLoading[selectedPost]) ? "hidden" : "animate-in fade-in zoom-in-95"
+                              )}>
+                                <video
+                                  src={generatedVideos[selectedPost]}
+                                  controls
+                                  autoPlay
+                                  loop
+                                  className="w-full object-cover max-h-[360px]"
+                                  onLoadedData={() => setMediaLoading(prev => ({ ...prev, [selectedPost]: false }))}
+                                />
+                                <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 bg-gray-50/50">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-pink-600">
+                                    <PlayCircle className="h-3.5 w-3.5" />
+                                    AI generated video
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      asChild
+                                      className="text-xs h-8 rounded-lg border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    >
+                                      <a href={generatedVideos[selectedPost]} download>
+                                        Download
+                                      </a>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

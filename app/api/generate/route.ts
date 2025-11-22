@@ -7,6 +7,7 @@ const PostIdeaSchema = z.object({
     type: z.enum(['carousel', 'reel', 'static']),
     title: z.string(),
     caption: z.string(),
+    script: z.string().optional(),
     hook: z.string(),
     cta: z.string(),
     hashtags: z.array(z.string()),
@@ -60,6 +61,7 @@ For each post, provide:
 - A clear CTA (one sentence call-to-action)
 - 8-10 relevant hashtags (mix of popular and niche)
 - A detailed image prompt (2-3 sentences describing composition, lighting, mood, colors, style)
+- [IMPORTANT] If the post type is 'reel', provide a 'script' field with a 30-60 second script including visual cues and spoken audio. Leave empty for other types.
 
 Make the content authentic, engaging, and tailored to the target audience. Focus on value-driven content that builds trust and drives engagement.`;
 
