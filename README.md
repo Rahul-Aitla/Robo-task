@@ -1,24 +1,28 @@
 # CampaignAI Studio 🚀
 
-An AI-powered social media campaign generator that helps founders and marketers create complete Instagram campaigns in seconds.
+An AI-powered social media campaign generator that helps founders and marketers create complete Instagram campaigns in seconds. Now with campaign history and scheduling!
 
 ## ✨ Features
 
-- **AI-Powered Content Generation**: Generate comprehensive Instagram campaigns using Google Gemini 2.0 Flash
-- **Complete Campaign Strategy**: Get a content plan tailored to your product and audience
-- **5 Diverse Post Ideas**: Mix of carousels, reels, and static posts
-- **Ready-to-Use Content**: Captions, hooks, CTAs, and hashtags for each post
-- **AI Image Prompts**: Detailed prompts for generating visuals with any AI image tool
-- **Free High-Quality Image Generation**: Generate professional images using Segmind SDXL API (free, no API key!)
-- **Automatic Prompt Enhancement**: Prompts are enhanced for better quality results
-- **Beautiful UI**: Modern, responsive design with smooth animations
-- **Copy-to-Clipboard**: Easily copy any content with one click
+- **AI-Powered Content Generation**: Generate comprehensive Instagram campaigns using **Groq (Llama 3.3)** for lightning-fast results.
+- **Complete Campaign Strategy**: Get a content plan tailored to your product and audience.
+- **5 Diverse Post Ideas**: Mix of carousels, reels, and static posts.
+- **Ready-to-Use Content**: Captions, hooks, CTAs, and hashtags for each post.
+- **AI Image & Video Generation**: 
+  - High-quality images via Segmind SDXL.
+  - Video generation via Hugging Face models.
+- **Campaign History**: Automatically saves your generated campaigns to Supabase.
+- **Content Calendar**: Schedule your posts and view them in an interactive calendar.
+- **Beautiful UI**: Modern, responsive design with smooth animations.
+- **Copy-to-Clipboard**: Easily copy any content with one click.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 16 (App Router) + TypeScript
 - **Styling**: Tailwind CSS v4 + shadcn/ui components
-- **AI**: Google Gemini 2.0-flash-exp via Vercel AI SDK
+- **AI (Text)**: Groq (Llama 3.3 70B Versatile) via Vercel AI SDK
+- **AI (Media)**: Segmind (Images), Hugging Face (Video)
+- **Database**: Supabase (PostgreSQL)
 - **Deployment**: Vercel (recommended)
 
 ## 🚀 Getting Started
@@ -26,7 +30,8 @@ An AI-powered social media campaign generator that helps founders and marketers 
 ### Prerequisites
 
 - Node.js 18+ installed
-- Google Gemini API key ([Get one here](https://aistudio.google.com/app/apikey))
+- Groq API key ([Get one here](https://console.groq.com/keys))
+- Supabase Project ([Create one here](https://supabase.com))
 
 ### Installation
 
@@ -43,22 +48,33 @@ npm install
 
 3. Create a `.env.local` file in the root directory:
 ```bash
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
+# AI Services
+GROQ_API_KEY=your_groq_api_key_here
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. Run the development server:
+4. Set up the Database:
+   - Go to your Supabase project's SQL Editor.
+   - Copy the contents of `supabase_schema.sql` from this repository.
+   - Run the SQL query to create the necessary tables and policies.
+
+5. Run the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## 📖 How to Use
 
 1. **Enter Product Description**: Describe your product or service
 2. **Specify Target Audience**: Define who you're trying to reach
 3. **Generate Campaign**: Click the button and watch the AI create your campaign
-4. **Copy & Use**: Copy any content with the clipboard buttons and use in your marketing
+4. **Save & Schedule**: Campaigns are automatically saved. Click "Schedule" on any post to add it to your calendar.
+5. **View Calendar**: Access the calendar from the sidebar to see your scheduled content.
 
 ## 🎯 Example Input
 
@@ -78,31 +94,31 @@ College students interested in sustainability and eco-friendly lifestyle
 campaign-studio/
 ├── app/
 │   ├── api/
-│   │   └── generate/
-│   │       └── route.ts          # API endpoint for AI generation
-│   ├── globals.css               # Global styles with custom utilities
-│   ├── layout.tsx                # Root layout with metadata
-│   └── page.tsx                  # Main application page
+│   │   ├── generate/         # Groq text generation
+│   │   ├── generate-image/   # Image generation
+│   │   └── generate-video/   # Video generation
+│   ├── calendar/             # Calendar page
+│   ├── globals.css           # Global styles
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Main application page
 ├── components/
-│   └── ui/                       # shadcn/ui components
+│   ├── app-sidebar.tsx       # Navigation sidebar
+│   └── ui/                   # shadcn/ui components
 ├── lib/
-│   ├── types.ts                  # TypeScript type definitions
-│   └── utils.ts                  # Utility functions
-└── public/                       # Static assets
+│   ├── supabase.ts           # Supabase client
+│   └── types.ts              # Type definitions
+└── supabase_schema.sql       # Database schema
 ```
 
 ## 🎨 Key Features Explained
 
 ### AI Integration
-- Uses Google Gemini 2.0 Flash for fast, cost-effective, high-quality content generation
-- Structured output with Zod schema validation ensures consistent results
-- Prompt engineering optimized for marketing content
+- **Groq (Llama 3.3)**: Delivers near-instant text generation for campaign strategies and posts.
+- **Multi-Modal**: Generates text, images, and videos in one workflow.
 
-### UI/UX
-- Gradient backgrounds and smooth animations for premium feel
-- Responsive design works on all devices
-- Copy-to-clipboard functionality for easy content usage
-- Visual indicators for different post types (carousel/reel/static)
+### Persistence & Scheduling
+- **Supabase Integration**: All campaigns are persisted to a PostgreSQL database.
+- **Interactive Calendar**: Visual planning of your content with status tracking.
 
 ## 🚢 Deployment
 
@@ -110,7 +126,7 @@ campaign-studio/
 
 1. Push your code to GitHub
 2. Import the project in [Vercel](https://vercel.com)
-3. Add your `GOOGLE_GENERATIVE_AI_API_KEY` in Environment Variables
+3. Add your Environment Variables (`GROQ_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 4. Deploy!
 
 ### Other Platforms
@@ -124,25 +140,23 @@ The app can be deployed to any platform that supports Next.js:
 ## 📝 Technical Write-up
 
 **AI Models Used:**
-Google Gemini 2.0-flash-exp for content generation.
-Segmind SDXL (Primary) & Pollinations.ai (Fallback) for image generation.
-Hugging Face (ModelScope/Zeroscope) for video generation.
+- **Groq (Llama 3.3-70b)**: For instant campaign strategy and copy generation.
+- **Segmind SDXL**: For high-fidelity image generation.
+- **Hugging Face (Zeroscope)**: For AI video generation.
 
-**Why This Model:**
-Gemini 2.0-flash-exp offers exceptional creative writing capabilities with fast response times. For images, we use a hybrid approach: Segmind SDXL for high-fidelity professional shots, automatically falling back to Pollinations.ai to ensure 100% uptime and reliability without cost.
+**Why These Models:**
+We switched to **Groq** to leverage its LPU inference engine, delivering near-instant text generation that makes the app feel real-time. **Llama 3.3** offers the perfect balance of creativity and instruction-following for marketing content. **Supabase** was added to provide persistent storage and real-time capabilities for the new calendar feature.
 
 **How AI is Used:**
-1. User input (product + audience) is processed into a structured prompt
-2. Gemini 2.0-flash-exp generates a complete campaign with content plan and 5 post ideas
-3. Zod schema validation ensures consistent, structured output
-4. Results include captions, hooks, CTAs, hashtags, and image prompts
+1. **Contextual Analysis**: The AI analyzes the product and target audience to determine the best tone and content strategy.
+2. **Structured Generation**: Groq generates a JSON-structured response containing the strategy and 5 distinct post types (Reels, Carousels, Static).
+3. **Visual Synthesis**: Image prompts created by the text model are sent to Segmind to generate matching visuals.
 
 **Architecture:**
-- Next.js App Router with TypeScript for type safety
-- API routes handle AI generation server-side (keeps API keys secure)
-- Vercel AI SDK simplifies Gemini integration with structured outputs
-- shadcn/ui components provide beautiful, accessible UI
-- Tailwind CSS for rapid, responsive styling
+- **Frontend**: Next.js 16 App Router for server-side rendering and optimal performance.
+- **Backend/DB**: Supabase (PostgreSQL) for storing campaigns and managing the content calendar.
+- **Styling**: Tailwind CSS v4 with shadcn/ui for a premium, accessible interface.
+- **AI Layer**: Vercel AI SDK for standardized API interactions.
 
 **Deployment:**
 Optimized for Vercel with serverless functions, ensuring fast global delivery and automatic scaling.
@@ -152,7 +166,9 @@ Optimized for Vercel with serverless functions, ensuring fast global delivery an
 Create a `.env.local` file with:
 
 ```env
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 ## 📄 License
@@ -166,12 +182,3 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 ## 👨‍💻 Author
 
 Built as a technical assignment to demonstrate full-stack AI application development.
-
----
-
-**Note**: This is a demo application. For production use, consider adding:
-- User authentication
-- Rate limiting
-- Database for saving campaigns
-- Payment integration
-- More AI models (video generation, etc.)
