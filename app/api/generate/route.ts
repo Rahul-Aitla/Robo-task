@@ -1,23 +1,6 @@
-import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai';
+import { groq } from '@ai-sdk/groq';
+import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
-
-const PostIdeaSchema = z.object({
-    type: z.enum(['carousel', 'reel', 'static']),
-    title: z.string(),
-    caption: z.string(),
-    script: z.string().optional(),
-    hook: z.string(),
-    cta: z.string(),
-    hashtags: z.array(z.string()),
-    imagePrompt: z.string(),
-});
-
-const CampaignSchema = z.object({
-    contentPlan: z.string(),
-    posts: z.array(PostIdeaSchema),
-});
 
 // Helper function to wait
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -25,10 +8,10 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function POST(req: Request) {
     try {
         // Check if API key is present
-        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
             return NextResponse.json(
-                { error: 'GOOGLE_GENERATIVE_AI_API_KEY is not configured. Please add it to your .env.local file.' },
+                { error: 'GROQ_API_KEY is not configured. Please add it to your .env.local file.' },
                 { status: 500 }
             );
         }
@@ -47,23 +30,30 @@ export async function POST(req: Request) {
 Product: ${productDescription}
 Target Audience: ${targetAudience}
 
-Generate:
-1. A brief content plan (2-3 sentences) explaining the campaign strategy
-2. Exactly 5 diverse post ideas with the following mix:
+Generate a JSON response with the following structure:
+{
+  "contentPlan": "A brief content plan (2-3 sentences) explaining the campaign strategy",
+  "posts": [
+    {
+      "type": "carousel" | "reel" | "static",
+      "title": "A catchy title (max 10 words)",
+      "caption": "A complete caption (80-120 words) with engaging hook",
+      "hook": "A powerful hook (one sentence to grab attention)",
+      "cta": "A clear CTA (one sentence call-to-action)",
+      "hashtags": ["#tag1", "#tag2", ...],
+      "imagePrompt": "A detailed image prompt (2-3 sentences)",
+      "script": "If type is 'reel', provide a 30-60 second script. Otherwise empty string."
+    }
+  ]
+}
+
+Requirements:
+1. Generate exactly 5 diverse post ideas:
    - 2 carousel posts (educational/storytelling)
    - 2 static posts (quotes/announcements)
    - 1 reel idea (engaging/trending)
-
-For each post, provide:
-- A catchy title (max 10 words)
-- A complete caption (80-120 words) with engaging hook
-- A powerful hook (one sentence to grab attention)
-- A clear CTA (one sentence call-to-action)
-- 8-10 relevant hashtags (mix of popular and niche)
-- A detailed image prompt (2-3 sentences describing composition, lighting, mood, colors, style)
-- [IMPORTANT] If the post type is 'reel', provide a 'script' field with a 30-60 second script including visual cues and spoken audio. Leave empty for other types.
-
-Make the content authentic, engaging, and tailored to the target audience. Focus on value-driven content that builds trust and drives engagement.`;
+2. Make the content authentic, engaging, and tailored to the target audience.
+3. IMPORTANT: Return ONLY the raw JSON object. Do not wrap it in markdown code blocks. Do not add any text before or after.`;
 
         // Retry logic with exponential backoff
         let lastError;
@@ -76,19 +66,22 @@ Make the content authentic, engaging, and tailored to the target audience. Focus
                     await wait(waitTime);
                 }
 
-                const result = await generateObject({
-                    model: google('gemini-2.0-flash-exp'),
-                    schema: CampaignSchema,
+                const { text } = await generateText({
+                    model: groq('llama-3.3-70b-versatile'),
                     prompt,
                 });
 
-                return NextResponse.json(result.object);
+                // Clean up the response if it contains markdown
+                const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+                const result = JSON.parse(cleanText);
+
+                return NextResponse.json(result);
             } catch (error: any) {
                 lastError = error;
                 console.error(`Attempt ${attempt + 1} failed:`, error?.message);
 
                 // If it's a rate limit error, continue to retry
-                if (error?.message?.includes('Quota exceeded') || error?.message?.includes('rate limit')) {
+                if (error?.message?.includes('429') || error?.message?.includes('rate limit')) {
                     continue;
                 }
                 // For other errors, throw immediately
@@ -106,9 +99,9 @@ Make the content authentic, engaging, and tailored to the target audience. Focus
         const errorMessage = error?.message || error?.toString() || 'Unknown error';
 
         // Check if it's a quota/rate limit error
-        if (errorMessage.includes('Quota exceeded') || errorMessage.includes('rate limit')) {
+        if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
             return NextResponse.json(
-                { error: 'Rate limit exceeded. Please wait a minute and try again. The free tier has limits on requests per minute.' },
+                { error: 'Rate limit exceeded. Please wait a minute and try again. Groq free tier has limits.' },
                 { status: 429 }
             );
         }

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.41",
+    "@ai-sdk/groq": "^2.0.31",
     "@ai-sdk/openai": "^2.0.71",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-separator": "^1.1.8",

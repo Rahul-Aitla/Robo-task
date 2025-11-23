@@ -98,14 +98,15 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate video');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || 'Failed to generate video');
       }
 
       const data = await response.json();
       setGeneratedVideos(prev => ({ ...prev, [index]: data.videoUrl }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating video:', error);
-      alert('Failed to generate video. Please try again.');
+      alert(error.message || 'Failed to generate video. Please try again.');
     } finally {
       setGeneratingVideo(null);
     }
@@ -558,25 +559,25 @@ export default function Home() {
                                 )}
                               </Button>
 
-                              {/* Video Button for Reels */}
+                              {/* Video Button for Reels (PRO Feature) */}
                               {result.posts[selectedPost].type === 'reel' && (
-                                <Button
-                                  onClick={() => handleGenerateVideo(result.posts[selectedPost].imagePrompt, selectedPost)}
-                                  disabled={generatingVideo === selectedPost}
-                                  className="w-full rounded-lg bg-pink-600 text-white text-sm font-medium hover:bg-pink-700 shadow-sm hover:shadow-md transition-all"
-                                >
-                                  {generatingVideo === selectedPost ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      Generating...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <PlayCircle className="w-4 h-4 mr-2" />
-                                      Generate Video
-                                    </>
-                                  )}
-                                </Button>
+                                <div className="relative group">
+                                  <Button
+                                    disabled
+                                    className="w-full rounded-lg bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed flex items-center justify-center gap-2 border border-slate-200"
+                                  >
+                                    <PlayCircle className="w-4 h-4" />
+                                    Generate Video
+                                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0">
+                                      PRO
+                                    </Badge>
+                                  </Button>
+                                  {/* Tooltip */}
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                    Upgrade to Pro to generate AI videos
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                                  </div>
+                                </div>
                               )}
                             </div>
 

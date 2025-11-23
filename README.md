@@ -18,7 +18,7 @@ An AI-powered social media campaign generator that helps founders and marketers 
 
 - **Frontend**: Next.js 16 (App Router) + TypeScript
 - **Styling**: Tailwind CSS v4 + shadcn/ui components
-- **AI**: Google Gemini 1.5 Flash via Vercel AI SDK
+- **AI**: Google Gemini 2.0-flash-exp via Vercel AI SDK
 - **Deployment**: Vercel (recommended)
 
 ## 🚀 Getting Started
@@ -124,10 +124,12 @@ The app can be deployed to any platform that supports Next.js:
 ## 📝 Technical Write-up
 
 **AI Models Used:**
-Google Gemini 2.0-flash-exp for content generation
+Google Gemini 2.0-flash-exp for content generation.
+Segmind SDXL (Primary) & Pollinations.ai (Fallback) for image generation.
+Hugging Face (ModelScope/Zeroscope) for video generation.
 
 **Why This Model:**
-Gemini 2.0-flash-exp offers exceptional creative writing capabilities with fast response times and generous free tier, making it perfect for generating marketing content. It excels at understanding context, maintaining brand voice, and producing engaging, audience-specific copy with consistent quality.
+Gemini 2.0-flash-exp offers exceptional creative writing capabilities with fast response times. For images, we use a hybrid approach: Segmind SDXL for high-fidelity professional shots, automatically falling back to Pollinations.ai to ensure 100% uptime and reliability without cost.
 
 **How AI is Used:**
 1. User input (product + audience) is processed into a structured prompt
