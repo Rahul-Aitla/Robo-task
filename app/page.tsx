@@ -275,6 +275,7 @@ function CampaignStudio() {
           setCollapsed={setSidebarCollapsed}
           refreshTrigger={sidebarRefreshTrigger}
           onNewProject={resetState}
+          onCampaignClick={() => setMobileMenuOpen(false)}
         />
       </div>
 

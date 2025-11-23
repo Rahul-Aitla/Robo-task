@@ -24,9 +24,10 @@ interface AppSidebarProps {
     setCollapsed: (collapsed: boolean) => void;
     refreshTrigger?: number;
     onNewProject?: () => void;
+    onCampaignClick?: () => void;
 }
 
-export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProject }: AppSidebarProps) {
+export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProject, onCampaignClick }: AppSidebarProps) {
     const router = useRouter();
     const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
 
@@ -101,7 +102,10 @@ export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProje
                         {recentCampaigns.map((campaign) => (
                             <div
                                 key={campaign.id}
-                                onClick={() => router.push(`/?id=${campaign.id}`)}
+                                onClick={() => {
+                                    router.push(`/?id=${campaign.id}`);
+                                    onCampaignClick?.();
+                                }}
                                 className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center cursor-pointer hover:bg-indigo-200"
                             >
                                 <span className="text-xs font-bold text-indigo-600">{campaign.name.charAt(0).toUpperCase()}</span>
@@ -114,7 +118,10 @@ export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProje
                             <Button
                                 key={campaign.id}
                                 variant="ghost"
-                                onClick={() => router.push(`/?id=${campaign.id}`)}
+                                onClick={() => {
+                                    router.push(`/?id=${campaign.id}`);
+                                    onCampaignClick?.();
+                                }}
                                 className="w-full justify-start text-sm font-normal text-slate-600 hover:bg-white hover:shadow-sm"
                             >
                                 <span className="w-6 h-6 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mr-3">
