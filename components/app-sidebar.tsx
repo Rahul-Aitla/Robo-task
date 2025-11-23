@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     PanelLeftClose,
@@ -11,16 +11,41 @@ import {
     User,
     CreditCard,
     LogOut,
-    Sparkles
+    Sparkles,
+    Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Campaign } from '@/lib/types';
 
 interface AppSidebarProps {
     collapsed: boolean;
     setCollapsed: (collapsed: boolean) => void;
+    refreshTrigger?: number;
+    onNewProject?: () => void;
 }
 
-export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
+export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProject }: AppSidebarProps) {
+    const router = useRouter();
+    const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
+
+    useEffect(() => {
+        const fetchCampaigns = async () => {
+            const { data, error } = await supabase
+                .from('campaigns')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (!error && data) {
+                setRecentCampaigns(data as Campaign[]);
+            }
+        };
+
+        fetchCampaigns();
+    }, [refreshTrigger]);
+
     return (
         <div
             className={cn(
@@ -49,6 +74,10 @@ export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
             {/* New Project Button */}
             <div className="p-4">
                 <Button
+                    onClick={() => {
+                        router.push('/');
+                        onNewProject?.();
+                    }}
                     className={cn(
                         "w-full bg-white border border-gray-200 text-slate-900 hover:bg-gray-50 hover:border-indigo-200 shadow-sm transition-all",
                         collapsed ? "px-0 justify-center" : "justify-start gap-2"
@@ -69,26 +98,36 @@ export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
 
                 {collapsed ? (
                     <div className="flex flex-col items-center gap-4 mt-4">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                            <span className="text-xs font-bold text-indigo-600">E</span>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
-                            <span className="text-xs font-bold text-pink-600">S</span>
-                        </div>
+                        {recentCampaigns.map((campaign) => (
+                            <div
+                                key={campaign.id}
+                                onClick={() => router.push(`/?id=${campaign.id}`)}
+                                className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center cursor-pointer hover:bg-indigo-200"
+                            >
+                                <span className="text-xs font-bold text-indigo-600">{campaign.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="space-y-1 px-2">
-                        <Button variant="ghost" className="w-full justify-start text-sm font-normal text-slate-600 hover:bg-white hover:shadow-sm">
-                            <span className="w-6 h-6 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mr-3">E</span>
-                            Eco Water Bottle
-                        </Button>
-                        <Button variant="ghost" className="w-full justify-start text-sm font-normal text-slate-600 hover:bg-white hover:shadow-sm">
-                            <span className="w-6 h-6 rounded bg-pink-100 text-pink-600 flex items-center justify-center text-xs font-bold mr-3">S</span>
-                            Summer Campaign
-                        </Button>
-                        <div className="px-4 py-8 text-center text-xs text-slate-400">
-                            No more recent projects
-                        </div>
+                        {recentCampaigns.map((campaign) => (
+                            <Button
+                                key={campaign.id}
+                                variant="ghost"
+                                onClick={() => router.push(`/?id=${campaign.id}`)}
+                                className="w-full justify-start text-sm font-normal text-slate-600 hover:bg-white hover:shadow-sm"
+                            >
+                                <span className="w-6 h-6 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mr-3">
+                                    {campaign.name.charAt(0).toUpperCase()}
+                                </span>
+                                <span className="truncate">{campaign.name}</span>
+                            </Button>
+                        ))}
+                        {recentCampaigns.length === 0 && (
+                            <div className="px-4 py-8 text-center text-xs text-slate-400">
+                                No recent projects
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -96,6 +135,10 @@ export function AppSidebar({ collapsed, setCollapsed }: AppSidebarProps) {
             {/* Bottom Actions */}
             <div className="p-2 border-t border-gray-200 bg-white/50">
                 <div className="space-y-1">
+                    <Button variant="ghost" className={cn("w-full text-slate-600", collapsed ? "justify-center px-2" : "justify-start")} onClick={() => window.location.href = '/calendar'}>
+                        <Calendar className="w-5 h-5 mr-2" />
+                        {!collapsed && "Calendar"}
+                    </Button>
                     <Button variant="ghost" className={cn("w-full text-slate-600", collapsed ? "justify-center px-2" : "justify-start")}>
                         <LayoutGrid className="w-5 h-5 mr-2" />
                         {!collapsed && "Integrations"}

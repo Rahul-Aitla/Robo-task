@@ -8,10 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, User, Target, Lightbulb, Zap, PlayCircle } from 'lucide-react';
+import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, User, Target, Lightbulb, Zap, PlayCircle, Calendar as CalendarIcon } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import type { CampaignOutput, PostIdea } from '@/lib/types';
 import { clsx } from 'clsx';
 import { AppSidebar } from '@/components/app-sidebar';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 const EXAMPLE_PRODUCTS = [
   { product: 'Eco-friendly water bottles made from recycled materials', audience: 'College students interested in sustainability', label: '🌱 Eco Product' },
@@ -32,6 +36,88 @@ export default function Home() {
   const [selectedPost, setSelectedPost] = useState<number>(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mediaLoading, setMediaLoading] = useState<Record<number, boolean>>({});
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const campaignId = searchParams.get('id');
+
+  const resetState = () => {
+    setProductDescription('');
+    setTargetAudience('');
+    setResult(null);
+    setGeneratedImages({});
+    setGeneratedVideos({});
+    setSelectedPost(0);
+    setCopiedIndex(null);
+    setGeneratingImage(null);
+    setGeneratingVideo(null);
+    setMediaLoading({});
+    setScheduling(false);
+    setScheduleDate('');
+  };
+
+  useEffect(() => {
+    if (campaignId) {
+      loadCampaign(campaignId);
+    } else {
+      resetState();
+    }
+  }, [campaignId]);
+
+  const loadCampaign = async (id: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProductDescription(data.product_description);
+        setTargetAudience(data.target_audience);
+        setResult({
+          contentPlan: data.content_plan,
+          posts: data.posts
+        });
+      }
+    } catch (error) {
+      console.error('Error loading campaign:', error);
+      toast.error('Failed to load campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!result || !result.posts[selectedPost] || !scheduleDate) return;
+
+    const post = result.posts[selectedPost];
+
+    try {
+      const { error } = await supabase.from('calendar_events').insert({
+        title: post.title,
+        date: new Date(scheduleDate).toISOString(),
+        type: post.type,
+        status: 'planned',
+        post: post
+      });
+
+      if (error) throw error;
+
+      toast.success('Post scheduled successfully!');
+      setScheduling(false);
+      setScheduleDate('');
+    } catch (error) {
+      console.error('Error scheduling post:', error);
+      toast.error('Failed to schedule post.');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!productDescription || !targetAudience) return;
@@ -55,9 +141,32 @@ export default function Home() {
 
       const data = await response.json();
       setResult(data);
+
+      // Save to Supabase
+      try {
+        const { error } = await supabase.from('campaigns').insert({
+          name: productDescription.slice(0, 50) + '...',
+          product_description: productDescription,
+          target_audience: targetAudience,
+          content_plan: data.contentPlan,
+          posts: data.posts
+        });
+
+        if (error) {
+          console.error('Error saving campaign:', error);
+          toast.error('Failed to save campaign: ' + error.message);
+        } else {
+          toast.success('Campaign saved to history');
+          setSidebarRefreshTrigger(prev => prev + 1);
+        }
+      } catch (err: any) {
+        console.error('Error saving campaign:', err);
+        toast.error('Failed to save campaign: ' + (err.message || 'Unknown error'));
+      }
+
     } catch (error) {
       console.error('Error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to generate campaign. Please check your API key and try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to generate campaign. Please check your API key and try again.');
     } finally {
       setLoading(false);
     }
@@ -81,7 +190,7 @@ export default function Home() {
       setGeneratedImages(prev => ({ ...prev, [index]: data.imageUrl }));
     } catch (error) {
       console.error('Error generating image:', error);
-      alert('Failed to generate image. Please try again.');
+      toast.error('Failed to generate image. Please try again.');
     } finally {
       setGeneratingImage(null);
     }
@@ -106,7 +215,7 @@ export default function Home() {
       setGeneratedVideos(prev => ({ ...prev, [index]: data.videoUrl }));
     } catch (error: any) {
       console.error('Error generating video:', error);
-      alert(error.message || 'Failed to generate video. Please try again.');
+      toast.error(error.message || 'Failed to generate video. Please try again.');
     } finally {
       setGeneratingVideo(null);
     }
@@ -115,6 +224,7 @@ export default function Home() {
   const copyToClipboard = async (text: string, index: number) => {
     await navigator.clipboard.writeText(text);
     setCopiedIndex(index);
+    toast.success('Copied to clipboard');
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
@@ -148,7 +258,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 text-slate-900 flex">
       {/* Sidebar */}
-      <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+      <AppSidebar
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+        refreshTrigger={sidebarRefreshTrigger}
+        onNewProject={resetState}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
@@ -576,6 +691,47 @@ export default function Home() {
                                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                                     Upgrade to Pro to generate AI videos
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Schedule Button */}
+                            <div className="mb-4">
+                              {!scheduling ? (
+                                <Button
+                                  onClick={() => setScheduling(true)}
+                                  variant="outline"
+                                  className="w-full rounded-lg border-gray-300 bg-white text-slate-700 hover:bg-gray-50"
+                                >
+                                  <CalendarIcon className="w-4 h-4 mr-2" />
+                                  Schedule Post
+                                </Button>
+                              ) : (
+                                <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-3 animate-in fade-in zoom-in-95">
+                                  <Label className="text-xs font-semibold text-slate-500">Pick a date</Label>
+                                  <div className="flex gap-2">
+                                    <Input
+                                      type="date"
+                                      value={scheduleDate}
+                                      onChange={(e) => setScheduleDate(e.target.value)}
+                                      className="h-9 text-sm"
+                                    />
+                                    <Button
+                                      onClick={handleSchedule}
+                                      disabled={!scheduleDate}
+                                      className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => setScheduling(false)}
+                                      className="h-9 w-9 p-0"
+                                    >
+                                      <span className="sr-only">Cancel</span>
+                                      &times;
+                                    </Button>
                                   </div>
                                 </div>
                               )}
