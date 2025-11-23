@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, User, Target, Lightbulb, Zap, PlayCircle, Calendar as CalendarIcon } from 'lucide-react';
+import { Sparkles, Instagram, Copy, Check, Loader2, Image as ImageIcon, MessageSquare, Video, User, Target, Lightbulb, Zap, PlayCircle, Calendar as CalendarIcon, Menu, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { CampaignOutput, PostIdea } from '@/lib/types';
 import { clsx } from 'clsx';
@@ -39,6 +39,7 @@ function CampaignStudio() {
   const [scheduling, setScheduling] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -257,22 +258,43 @@ function CampaignStudio() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-slate-900 flex">
-      {/* Sidebar */}
-      <AppSidebar
-        collapsed={sidebarCollapsed}
-        setCollapsed={setSidebarCollapsed}
-        refreshTrigger={sidebarRefreshTrigger}
-        onNewProject={resetState}
-      />
+      {/* Sidebar - Hidden on mobile by default */}
+      <div className={`${mobileMenuOpen ? 'fixed inset-0 z-50 lg:relative lg:z-auto' : 'hidden lg:flex'
+        }`}>
+        {/* Mobile overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="absolute inset-0 bg-black/50 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        <div className={`relative lg:relative ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform duration-300`}>
+          <AppSidebar
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+            refreshTrigger={sidebarRefreshTrigger}
+            onNewProject={resetState}
+          />
+        </div>
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Top Header */}
-        <header className="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-40 px-6 py-3 flex items-center justify-between">
+        <header className="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-40 px-3 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden mr-2"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
             <h2 className="text-sm font-semibold text-slate-700">Campaign Studio</h2>
-            <span className="text-slate-300">/</span>
-            <span className="text-sm text-slate-500">New Campaign</span>
+            <span className="text-slate-300 hidden sm:inline">/</span>
+            <span className="text-sm text-slate-500 hidden sm:inline">New Campaign</span>
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="hidden sm:flex text-xs border-gray-300 text-slate-500 bg-white">
@@ -281,21 +303,21 @@ function CampaignStudio() {
           </div>
         </header>
 
-        <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <main className="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left Column: Campaign Brief */}
             <div className="lg:col-span-1">
-              <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm sticky top-24 transition-all hover:shadow-md">
+              <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-24 transition-all hover:shadow-md">
                 <CardHeader>
-                  <CardTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-indigo-600" />
+                  <CardTitle className="text-lg sm:text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                     Campaign Brief
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
                     Fill in the details to generate your Instagram campaign
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-5">
+                <CardContent className="space-y-4 sm:space-y-5">
                   {/* Product Name */}
                   <div className="space-y-2">
                     <Label htmlFor="product" className="text-sm font-semibold text-slate-900">
@@ -335,7 +357,7 @@ function CampaignStudio() {
                         Not sure what to enter? Try one of these presets:
                       </Label>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                       {EXAMPLE_PRODUCTS.map((example, i) => (
                         <button
                           key={i}
@@ -354,7 +376,7 @@ function CampaignStudio() {
                   <Button
                     onClick={handleGenerate}
                     disabled={!productDescription || !targetAudience || loading}
-                    className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2.5 hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:hover:bg-indigo-600"
+                    className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-3 sm:py-2.5 hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:hover:bg-indigo-600 touch-manipulation"
                   >
                     {loading ? (
                       <>
@@ -377,9 +399,9 @@ function CampaignStudio() {
               <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm h-full">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Instagram className="w-5 h-5 text-pink-500" />
+                    <Instagram className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
                     <div className="flex-1">
-                      <CardTitle className="text-xl font-semibold text-slate-900">Campaign Ideas</CardTitle>
+                      <CardTitle className="text-lg sm:text-xl font-semibold text-slate-900">Campaign Ideas</CardTitle>
                       <CardDescription className="text-xs text-slate-500 mt-1">
                         Generated posts will appear here. Click to open details.
                       </CardDescription>
@@ -392,9 +414,9 @@ function CampaignStudio() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                  <div className="flex flex-col md:grid md:grid-cols-5 gap-4 sm:gap-6">
                     {/* Left Panel: Post List */}
-                    <div className="md:col-span-2 space-y-3">
+                    <div className="md:col-span-2 space-y-2 sm:space-y-3">
                       {!result && !loading && (
                         <div className="text-center py-16 flex flex-col items-center justify-center">
                           <div className="relative mb-4">
@@ -440,7 +462,7 @@ function CampaignStudio() {
                                 key={index}
                                 onClick={() => setSelectedPost(index)}
                                 className={clsx(
-                                  "rounded-xl border px-4 py-3 cursor-pointer transition-all",
+                                  "rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer transition-all touch-manipulation",
                                   isSelected
                                     ? "border-indigo-300 bg-indigo-50 shadow-sm"
                                     : "border-gray-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm"
@@ -456,8 +478,8 @@ function CampaignStudio() {
                                         </span>
                                       </Badge>
                                     </div>
-                                    <h3 className="text-sm font-semibold text-slate-900 mb-1 line-clamp-2">{post.title}</h3>
-                                    <p className="text-xs text-slate-500 line-clamp-1">{post.hook}</p>
+                                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 line-clamp-2">{post.title}</h3>
+                                    <p className="text-xs text-slate-500 line-clamp-1 hidden sm:block">{post.hook}</p>
                                   </div>
                                 </div>
                               </div>
@@ -468,7 +490,7 @@ function CampaignStudio() {
                     </div>
 
                     {/* Right Panel: Post Details */}
-                    <div className="md:col-span-3 space-y-4">
+                    <div className="md:col-span-3 space-y-3 sm:space-y-4">
                       {!result && !loading && (
                         <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-6 space-y-4">
                           <div className="space-y-2">
@@ -507,13 +529,13 @@ function CampaignStudio() {
                       )}
 
                       {result && result.posts[selectedPost] && (
-                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-5 space-y-5 shadow-md">
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 sm:p-5 space-y-4 sm:space-y-5 shadow-md">
                           {/* Hook */}
                           <div>
                             <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
                               Opening Hook
                             </Label>
-                            <p className="text-lg font-semibold text-slate-900 leading-relaxed">
+                            <p className="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed">
                               {result.posts[selectedPost].hook}
                             </p>
                           </div>
@@ -655,11 +677,11 @@ function CampaignStudio() {
                               </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                               <Button
                                 onClick={() => handleGenerateImage(result.posts[selectedPost].imagePrompt, selectedPost)}
                                 disabled={generatingImage === selectedPost}
-                                className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all"
+                                className="w-full rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all touch-manipulation py-3 sm:py-2"
                               >
                                 {generatingImage === selectedPost ? (
                                   <>

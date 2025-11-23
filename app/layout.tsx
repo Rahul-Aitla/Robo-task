@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Generate complete Instagram campaigns in seconds. Get content plans, post ideas, captions, hooks, CTAs, hashtags, and AI image prompts tailored to your product and audience.",
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,10 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        
+
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        
+
         {children}
         <Toaster />
       </body>

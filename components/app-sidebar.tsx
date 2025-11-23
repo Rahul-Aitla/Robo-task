@@ -49,7 +49,7 @@ export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProje
     return (
         <div
             className={cn(
-                "flex flex-col border-r border-gray-200 bg-gray-50/50 h-screen sticky top-0 transition-all duration-300 ease-in-out",
+                "flex flex-col border-r border-gray-200 bg-white lg:bg-gray-50/50 h-screen sticky top-0 transition-all duration-300 ease-in-out shadow-xl lg:shadow-none",
                 collapsed ? "w-16" : "w-64"
             )}
         >
@@ -65,7 +65,7 @@ export function AppSidebar({ collapsed, setCollapsed, refreshTrigger, onNewProje
                     variant="ghost"
                     size="icon"
                     onClick={() => setCollapsed(!collapsed)}
-                    className="ml-auto text-slate-500 hover:text-slate-900"
+                    className="ml-auto text-slate-500 hover:text-slate-900 hidden lg:flex"
                 >
                     {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                 </Button>

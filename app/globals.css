@@ -204,3 +204,40 @@ a,
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.7 0.02 260);
 }
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Better touch targets */
+  button, a, [role="button"], input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Prevent zoom on input focus on iOS */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  /* Better spacing for mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Touch manipulation optimization */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
