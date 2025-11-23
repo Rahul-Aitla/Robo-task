@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ const EXAMPLE_PRODUCTS = [
   { product: 'Handmade organic skincare products', audience: 'Health-conscious millennials aged 25-35', label: '✨ Beauty Brand' },
 ];
 
-export default function Home() {
+function CampaignStudio() {
   const [productDescription, setProductDescription] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [loading, setLoading] = useState(false);
@@ -838,5 +838,17 @@ export default function Home() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    }>
+      <CampaignStudio />
+    </Suspense>
   );
 }
