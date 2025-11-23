@@ -738,6 +738,7 @@ function CampaignStudio() {
                                       type="date"
                                       value={scheduleDate}
                                       onChange={(e) => setScheduleDate(e.target.value)}
+                                      min={new Date().toISOString().split('T')[0]}
                                       className="h-9 text-sm"
                                     />
                                     <Button

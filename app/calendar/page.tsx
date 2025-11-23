@@ -68,18 +68,22 @@ export default function CalendarPage() {
     return (
         <div className="min-h-screen bg-gray-50 text-slate-900 flex">
             {/* Sidebar - Hidden on mobile by default */}
-            <div className={`${mobileMenuOpen ? 'fixed inset-0 z-50 lg:relative lg:z-auto' : 'hidden lg:flex'
-                }`}>
-                {/* Mobile overlay */}
-                {mobileMenuOpen && (
-                    <div
-                        className="absolute inset-0 bg-black/50 lg:hidden"
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                )}
-                <div className={`relative lg:relative ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform duration-300`}>
-                    <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-                </div>
+            {/* Mobile overlay */}
+            {mobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* Sidebar Container */}
+            <div className={`${mobileMenuOpen ? 'fixed left-0 top-0 bottom-0 z-50' : 'hidden'
+                } lg:relative lg:flex lg:z-auto transition-all duration-300`}>
+                <AppSidebar
+                    collapsed={sidebarCollapsed}
+                    setCollapsed={setSidebarCollapsed}
+                    onCampaignClick={() => setMobileMenuOpen(false)}
+                />
             </div>
 
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
